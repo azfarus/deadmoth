@@ -61,7 +61,7 @@ int main()
         for (float i = 0; i < 40; i+=.003)
         {
             float x = i;
-            amarline.setPosition(20*x*c_x,300- c*(x) * sinf(x + del));
+            amarline.setPosition(20*x*c_x,300- c*(x) * sinf(x - del));
             amarwindow.draw(amarline);
         }
         del += 0.2;
