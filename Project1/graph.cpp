@@ -10,7 +10,7 @@ public:
 	sf::RectangleShape butt;
 	sf::Texture n,f,p;
 
-	Button(int x , int y , int w , int h , string &Nn , string &Ff , string &Pp )
+	Button(int x , int y , int w , int h , std::string &Nn , std::string &Ff , std::string &Pp )
 	{
 		butt.setSize(sf::Vector2f(w, h));
 		
@@ -33,7 +33,7 @@ public:
 		if ((buttpos_x < mouse_x && buttpos_x + buttwidth > mouse_x) && (buttpos_y < mouse_y && buttpos_y + buttwidth > mouse_y))
 		{
 			butt.setTexture(&f);
-			std::cout << "Button hovering" << endl;
+			std::cout << "Button hovering\n";
 			if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
 			{
 				return 2;
@@ -50,12 +50,12 @@ public:
 
 	}
 
-	void setTexture(string &filename)
+	void setTexture(std::string &filename)
 	{
 		sf::Texture jama;
 		if (!jama.loadFromFile(filename))
 		{
-			cout << "Failed to load texture";
+			std::cout << "Failed to load texture\n";
 		}
 		return;
 		
