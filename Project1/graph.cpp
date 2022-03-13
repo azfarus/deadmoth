@@ -111,7 +111,7 @@ int chooseNode(node* graph, int nodeCount,  std::map<int,float> &nodepairs)
 	return position;
 }
 
-void djikstra(node* graph, int nodeCount, std::map<int,float> &nodepairs)
+void djikstra(node* graph, int nodeCount, std::map<int,float> &nodepairs , sf::RenderWindow &window)
 {
 	while (true)
 	{
@@ -149,6 +149,12 @@ void djikstra(node* graph, int nodeCount, std::map<int,float> &nodepairs)
 
 			}
 			std::cout << "\n";
+			for (int i = 0; i < nodes; i++)
+			{
+				graph[i].drawNode(window, graph);
+
+			}
+			window.display();
 		}
 	}
 }
@@ -161,14 +167,6 @@ int main()
 	int x, y;
 	std::vector<sf::Vector2f> pointGula;
 	std::map<int, float> nodepairs;
-
-
-	
-
-	std::cout << "aage\n";
-	//djikstra(0, graph, nodes);
-	//findNode(graph, nodes, graph[0].connectedNodes[0]);
-
 	
 
 	
@@ -200,7 +198,6 @@ int main()
 			int conneced_to = rand() % nodes;
 			std::cout << "connecting" << sizeof(node) << "\n";
 			if (conneced_to != i) connect( i,  conneced_to , graph);
-			//inserted[j] = true;
 		}
 	}
 
@@ -211,7 +208,7 @@ int main()
 	graph[ends].find = 1;
 	path.push_back(0);
 
-	djikstra(graph,nodes,nodepairs);
+	
 	while (window.isOpen())
 	{
 		sf::Event eve;
@@ -220,18 +217,18 @@ int main()
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
 			{
 				window.close();
+				return 0;
 			}
 		}
 		window.clear(sf::Color::Black);
-		//Sleep(5000);
-		for (int i = 0; i < nodes;i++ )
-		{
-			graph[i].drawNode(window , graph);
-			
-		}
+		djikstra(graph, nodes, nodepairs , window);
 		drawPath(graph, window, ends);
 		window.display();
-		//Sleep(5000);
+		Sleep(5000);
+	}
+	while (!sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+	{
+		
 	}
 
 }
