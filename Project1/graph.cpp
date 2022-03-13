@@ -4,7 +4,7 @@
 #include <dos.h>
 #define nodes 50
 #define edges 7
-#define ends 36
+#define ends 8
 #define rad 10
 
 std::vector<int> path;
@@ -13,15 +13,15 @@ std::vector<int> path;
 class node
 {
 public:
-	std::vector<sf::Vector2f> connectedNodes;
+	std::vector<int> connectedNodes;
 	sf::Vector2f myPos;
 	sf::CircleShape circle;
 	
 	float distance = 1e10;
-	int find = 0, visited = 0 , shuru = 0 ;
+	int find = 0, visited = 0 , shuru = 0 , previous , me ;
 	
 
-	void drawNode(sf::RenderWindow& window)
+	void drawNode(sf::RenderWindow& window , node * graph)
 	{
 		sf::VertexArray line(sf::Lines, 2);
 
@@ -47,36 +47,40 @@ public:
 		
 		for (size_t i = 0; i < connectedNodes.size(); i++)
 		{
-			line[1].position = connectedNodes[i];
+			line[1].position = graph[connectedNodes[i]].myPos;
 			window.draw(line);
 		}
 		window.draw(circle);
 
 	}
-	void nodePush(sf::Vector2f &n)
+	void nodePush(int n)
 	{
 		connectedNodes.push_back(n);
 	}
 	
 };
 
-void drawPath(node* graph, sf::RenderWindow &window)
+void drawPath(node* graph, sf::RenderWindow &window , int endNode)
 {
 	sf::VertexArray line(sf::Lines, 2);;
-	for (unsigned int i = 0; i < (path.size()-1); i++)
+	if (graph[endNode].me == graph[endNode].previous)
 	{
-		line[0].position = graph[path[i]].myPos; line[0].color = sf::Color::Green;
-		line[1].position = graph[path[i + 1]].myPos; line[1].color = sf::Color::Green;
+		return;
+	}
+	else {
+		line[0].position = graph[endNode].myPos; line[0].color = sf::Color::Green;
+		line[1].position = graph[graph[endNode].previous].myPos; line[1].color = sf::Color::Green;
 		window.draw(line);
+		return drawPath(graph, window, graph[endNode].previous);
 	}
 }
 
-void connect(node *a, node  *b )
+void connect(int a, int   b , node * graph)
 {
 	//if (a->connections < edges && b->connections <= edges)
 	{
-		a->nodePush(b->myPos);
-		b->nodePush(a->myPos);
+		graph[a].nodePush(b);
+		graph[b].nodePush(a);
 		
 		return;
 	}
@@ -87,75 +91,79 @@ void connect(node *a, node  *b )
 
 }
 
-int findNode(node* graph, int nodeCount, sf::Vector2f nodepos)
+int chooseNode(node* graph, int nodeCount,  std::map<int,float> &nodepairs)
 {
+	float lowestval = 1e10;
+	int position = -1;
 	for (int i = 0; i < nodeCount; i++)
 	{
-		if (graph[i].myPos.x == nodepos.x && graph[i].myPos.y== nodepos.y && (graph[i].visited != 1))
+		if ( ( nodepairs[i] < lowestval) && (graph[i].visited != 1))
 		{
-			//std::cout << i;
-			return i;
+			lowestval = nodepairs[i];
+			position = i;
 		}
 	}
-	return -1;
-}
-
-void djikstra(int start, node* graph, int nodeCount)
-{
-	if (graph[start].find == 1)
-	{
-		graph[start].visited == 1;
-		std::cout << "Pouchaisi\n";
-		return;
-	}
-	else
-	{
-		graph[start].visited = 1;
-		int nextnode , dist_assign_node;
-		float lowest_dist = 1e10;
-		for (int i = 0; i < graph[start].connectedNodes.size(); i++)
-		{
+	int c = 0;
+	for (auto itr = nodepairs.begin()  ; itr != nodepairs.end(); ++itr , c++) {
+		std::cout << '\t' << itr->first << '\t' << itr->second<<'\t' << graph[c].previous << '\t'<< position << '\n';
 			
-
-			double distance_x = (graph[start].connectedNodes[i].x - graph[start].myPos.x) * (graph[start].connectedNodes[i].x - graph[start].myPos.x);
-			double distance_y = (graph[start].connectedNodes[i].y - graph[start].myPos.y) * (graph[start].connectedNodes[i].y - graph[start].myPos.y);
-			float distance = sqrtf(distance_x + distance_y) + graph[start].distance;
-			dist_assign_node = findNode(graph, nodeCount, graph[start].connectedNodes[i]);
-			if (dist_assign_node < 0)
-			{
-				std::cout << "> " << dist_assign_node << " > " << distance << "\n";
-				continue;;
-			}
-			if (graph[dist_assign_node].distance > distance)
-			{
-				std::cout << ">> " << distance << "\n";
-				graph[dist_assign_node].distance = distance;
-			}
-			if (lowest_dist > graph[dist_assign_node].distance)
-			{
-				lowest_dist = graph[dist_assign_node].distance;
-				nextnode = dist_assign_node;
-				
-			}
-		}
-		std::cout << "nextnode " << nextnode << '\n';
-		path.push_back(nextnode);
-		return djikstra(nextnode, graph, nodeCount);
-
 	}
-
+	return position;
 }
+
+void djikstra(node* graph, int nodeCount, std::map<int,float> &nodepairs)
+{
+	while (true)
+	{
+		int start = chooseNode(graph, nodeCount, nodepairs);
+		if (start < 0)
+		{
+			std::cout << "pouchaite parinai\n";
+			return;
+		}
+		else if (graph[start].find == 1)
+		{
+			std::cout << "At node >>>> " << start << " prev " << graph[start].previous << "\n";
+			std::cout << "pouchaisi\n";
+			return;
+		}
+		else
+		{
+			graph[start].visited = 1;
+			std::cout << "At node >>>> " << start << " prev " << graph[start].previous<< " connections ";
+			
+			for (unsigned int i = 0; i < graph[start].connectedNodes.size(); i++)
+			{
+				int connection = graph[start].connectedNodes[i];
+				std::cout << connection <<' ';
+				sf::Vector2f difference;
+				difference.x = graph[start].myPos.x - graph[connection].myPos.x;
+				difference.y = graph[start].myPos.y - graph[connection].myPos.y;
+				float distance = sqrtf(difference.x * difference.x + difference.y * difference.y) + graph[start].distance;
+				if (nodepairs[i] > distance && (graph[connection].visited != 1) )
+				{
+					nodepairs[connection] = distance;
+					graph[connection].previous = start;
+					graph[connection].distance = distance;
+				}
+
+			}
+			std::cout << "\n";
+		}
+	}
+}
+
+
 int main()
 {
 	sf::RenderWindow window(sf::VideoMode(1000, 800), "lines");
 	node graph[nodes];
 	int x, y;
 	std::vector<sf::Vector2f> pointGula;
+	std::map<int, float> nodepairs;
 
-	graph[0].shuru = 1;
-	graph[0].distance = 0;
-	graph[ends].find = 1;
-	path.push_back(0);
+
+	
 
 	std::cout << "aage\n";
 	//djikstra(0, graph, nodes);
@@ -176,6 +184,9 @@ int main()
 			std::cout << "pushed"<<sizeof(graph)<<"\n";
 			pointGula.push_back(point);
 			graph[i].myPos = point;
+			graph[i].me = i;
+			graph[i].previous = i;
+			nodepairs[i] = 1e10;
 			i++;
 
 		}
@@ -188,12 +199,19 @@ int main()
 		{
 			int conneced_to = rand() % nodes;
 			std::cout << "connecting" << sizeof(node) << "\n";
-			if (conneced_to != i) connect(graph + i, graph + conneced_to);
+			if (conneced_to != i) connect( i,  conneced_to , graph);
 			//inserted[j] = true;
 		}
 	}
 
-	djikstra(0, graph, nodes);
+	graph[0].shuru = 1;
+	graph[0].distance = 0;
+	graph[0].previous = 0;
+	nodepairs[0] = 0;
+	graph[ends].find = 1;
+	path.push_back(0);
+
+	djikstra(graph,nodes,nodepairs);
 	while (window.isOpen())
 	{
 		sf::Event eve;
@@ -208,10 +226,10 @@ int main()
 		//Sleep(5000);
 		for (int i = 0; i < nodes;i++ )
 		{
-			graph[i].drawNode(window);
+			graph[i].drawNode(window , graph);
 			
 		}
-		drawPath(graph, window);
+		drawPath(graph, window, ends);
 		window.display();
 		//Sleep(5000);
 	}
