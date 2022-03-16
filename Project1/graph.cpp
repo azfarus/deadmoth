@@ -117,7 +117,7 @@ void djikstra(node* graph, int nodeCount, std::map<int,float> &nodepairs , sf::R
 {
 	sf::CircleShape circ;
 	circ.setRadius(rad + 5);
-	circ.setOrigin({ (rad + 5) / 2.0,(rad + 5) / 2.0 });
+	circ.setOrigin({ (rad + 5) ,(rad + 5)  });
 	circ.setFillColor(sf::Color::Yellow);
 	while (true)
 	{
